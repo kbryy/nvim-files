@@ -25,7 +25,7 @@ return require("packer").startup(function(use)
     use("kdheepak/tabline.nvim")           -- タブライン
     use("echasnovski/mini.indentscope")    -- インデントアニメーション
     use({
-        "nvim-treesitter/nvim-treesitter", -- シンタックスハイライト
+        "nvim-treesitter/nvim-treesitter", -- シンタックスハイライト build-essentialが必要
         run = ":TSUpdate",
     })
     use({
