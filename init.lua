@@ -17,7 +17,7 @@ require("mini.indentscope").setup({
 })
 
 require("nvim-treesitter.configs").setup({
-    auto_install = true,
+    -- auto_install = true, -- docker-myenvでエラーになる
     highlight = { enable = true, },
 })
 
