@@ -52,6 +52,7 @@ vim.opt.signcolumn = "yes" -- サインカラムを表示
 -- undo
 vim.opt.undofile = true
 vim.opt.undodir = vim.fn.expand('~/.config/nvim/undodir')
+
 -- カーソルの位置を記憶
 vim.cmd([[autocmd BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal! g'\"" | endif]])
 
