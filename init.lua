@@ -1,4 +1,3 @@
-
 require("plugins")
 require("keymaps")
 require("options")
@@ -30,3 +29,5 @@ vim.api.nvim_create_autocmd("BufWritePost", {
 vim.api.nvim_set_var('maplocalleader', ' ')
 vim.g.vimtex_compiler_latexmk = { continuous = 0 }
 vim.g.vimtex_syntax_enabled = 0
+
+vim.cmd('au FileType * setlocal fo-=c fo-=r fo-=o') -- 改行時の自動コメントアウト無効
