@@ -18,8 +18,8 @@ if vim.g.vscode then
 else
     keymap("n", "<leader>w", "<cmd>w<cr>")
     keymap("n", "<leader>o", function() require("telescope.builtin").find_files { hidden = true } end)
-    keymap("n", "<leader>h", "<cmd>bnext<cr>", opts)
-    keymap("n", "<leader>l", "<cmd>bprevious<cr>", opts)
+    keymap("n", "<leader>l", "<cmd>bnext<cr>", opts)
+    keymap("n", "<leader>h", "<cmd>bprevious<cr>", opts)
 
     keymap('i', 'jj', '<c-c>', opts)
     keymap("n", "<C-b>", "<cmd>NeoTreeShowToggle<cr>", opts)
