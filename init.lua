@@ -24,6 +24,7 @@ else
     keymap("n", "<leader>l", "<cmd>bnext<cr>", opts)
 
     keymap('i', 'jj', '<c-c>', opts)
+    keymap("n", "<Esc><Esc>", ":<C-u>set nohlsearch<Return>", opts) -- ESC*2 でハイライトやめる
 end
 
 
@@ -87,14 +88,30 @@ vim.cmd([[colorscheme tokyonight-storm]])
 -------------
 -- AUTOCMD --
 -------------
-vim.cmd('au FileType * setlocal fo-=c fo-=r fo-=o') -- 改行時の自動コメントアウト無効
--- カーソルの位置を記憶
-vim.cmd([[autocmd BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal! g'\"" | endif]])
 vim.api.nvim_create_autocmd("BufWritePost", {
-    pattern = { "plugins.lua" },
+    pattern = { "init.lua" },
     command = "PackerCompile",
 })
 
+-- Remove whitespace on save
+vim.api.nvim_create_autocmd("BufWritePre", {
+    pattern = "*",
+    command = ":%s/\\s\\+$//e",
+})
+
+-- Don't auto commenting new lines
+vim.api.nvim_create_autocmd("BufEnter", {
+    pattern = "*",
+    command = "set fo-=c fo-=r fo-=o",
+})
+
+-- Restore cursor location when file is opened
+vim.api.nvim_create_autocmd({ "BufReadPost" }, {
+    pattern = { "*" },
+    callback = function()
+        vim.api.nvim_exec('silent! normal! g`"zv', false)
+    end,
+})
 
 --------------
 -- PACKAGES --
@@ -109,7 +126,25 @@ local ensure_packer = function()
     end
     return false
 end
-ensure_packer() -- packer_bootstrap
+PACKER_BOOTSTRAP = ensure_packer() -- packer_bootstrap
+
+-- Autocommand that reloads neovim whenever you save the plugins.lua file
+-- vim.cmd([[
+--   augroup packer_user_config
+--     autocmd!
+--     autocmd BufWritePost init.lua source <afile> | PackerSync
+--   augroup end
+-- ]])
+
+local packer = require "packer"
+-- Have packer use a popup window
+packer.init({
+    display = {
+        open_fn = function()
+            return require("packer.util").float({ border = "rounded" })
+        end,
+    },
+})
 
 return require("packer").startup(function(use)
     -- パッケージマネジャー
@@ -137,7 +172,6 @@ return require("packer").startup(function(use)
         end,
     }
 
-    -- use({ "jiangmiao/auto-pairs", event = { "InsertEnter" } }) -- 自動でカッコを閉じる
     use { "jiangmiao/auto-pairs" } -- 自動でカッコを閉じる
 
     use {
@@ -380,5 +414,8 @@ return require("packer").startup(function(use)
             opts = true,
             cmd = { "StartupTime" }
         }
+    end
+    if PACKER_BOOTSTRAP then
+        require("packer").sync()
     end
 end)
