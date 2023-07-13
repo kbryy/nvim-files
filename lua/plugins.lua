@@ -356,6 +356,7 @@ packer.startup(function(use)
     -- Lua
     use {
         "folke/which-key.nvim",
+        opt = true,
         event = "VimEnter",
         config = function()
             vim.o.timeout = true
