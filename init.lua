@@ -5,6 +5,7 @@ local opts = { noremap = true, silent = true }
 local keymap = vim.keymap.set
 
 vim.g.mapleader = " "
+vim.g.maplocalleader = " "
 
 keymap({ "n", "v" }, "<c-j>", "}", opts)
 keymap({ "n", "v" }, "<c-k>", "{", opts)
@@ -18,13 +19,15 @@ if vim.g.vscode then
     keymap("n", "<leader>h", "<cmd>call VSCodeNotify('workbench.action.previousEditor')<cr>")
     keymap("n", "<leader>l", "<cmd>call VSCodeNotify('workbench.action.nextEditor')<cr>")
 else
-    keymap("n", "<leader>o", "<cmd>Telescope find_files hidden=true<cr>")
     keymap("n", "<leader>w", "<cmd>w<cr>")
     keymap("n", "<leader>h", "<cmd>bprevious<cr>", opts)
     keymap("n", "<leader>l", "<cmd>bnext<cr>", opts)
 
     keymap('i', 'jj', '<c-c>', opts)
     keymap("n", "<Esc><Esc>", ":<C-u>set nohlsearch<Return>", opts) -- ESC*2 でハイライトやめる
+
+    keymap('t', '<Esc>', '<C-\\><C-n>', { noremap = true })
+    keymap('t', 'jj', '<C-\\><C-n>', { noremap = true })
 end
 
 
@@ -42,7 +45,7 @@ vim.opt.cursorline = true   -- カーソルがある行を強調
 vim.opt.cursorcolumn = true -- カーソルがある列を強調
 
 -- クリップボード共有
-vim.opt.clipboard:append({ "unnamedplus" }) -- レジスタとクリップボードを共有
+-- vim.opt.clipboard:append({ "unnamedplus" }) -- レジスタとクリップボードを共有
 
 -- メニューとコマンド
 vim.opt.wildmenu = true -- コマンドラインで補完
@@ -82,8 +85,6 @@ vim.opt.signcolumn = "yes" -- サインカラムを表示
 -- undo
 vim.opt.undofile = true
 vim.opt.undodir = vim.fn.expand('~/.config/nvim/undodir')
-
-vim.cmd([[colorscheme tokyonight-storm]])
 
 -------------
 -- AUTOCMD --
@@ -145,18 +146,20 @@ packer.init({
         end,
     },
 })
-
-return require("packer").startup(function(use)
+packer.reset()
+packer.startup(function(use)
     -- パッケージマネジャー
-    use { "wbthomason/packer.nvim",
+    use {
+        "wbthomason/packer.nvim",
         opt = true,
+        ft = { "lua" }
     }
 
     -- 入力補助
     use {
         "rhysd/clever-f.vim", -- f の強化
         opts = true,
-        keys = { { "n", "f" } },
+        keys = { "n", "f" },
         setup = function()
             vim.g['clever_f_across_no_line'] = 1
         end,
@@ -165,14 +168,18 @@ return require("packer").startup(function(use)
     use {
         "tpope/vim-commentary", -- コメントアウト
         opts = true,
-        keys = { "nv", "gcc" },
+        keys = { "nv", "gc" },
         cmd = "Commentary",
         setup = function()
             vim.keymap.set({ "n", "v", "i" }, "<C-_>", "<cmd>Commentary<cr>")
         end,
     }
 
-    use { "jiangmiao/auto-pairs" } -- 自動でカッコを閉じる
+    use {
+        "jiangmiao/auto-pairs", -- 自動でカッコを閉じる
+        opt = true,
+        event = { "BufRead", "BufNewFile", "InsertEnter", "CmdlineEnter" },
+    }
 
     use {
         "tpope/vim-surround", -- cs"':''->"" ds":""->_
@@ -186,12 +193,14 @@ return require("packer").startup(function(use)
     -- 見た目
     use {
         "echasnovski/mini.indentscope", -- インデントアニメーション
+        -- opt = true,
+        -- event = { "BufRead", "BufNewFile", "InsertEnter", "CmdlineEnter" },
+        event = { "InsertEnter" },
         config = function()
             require("mini.indentscope").setup({
                 symbol = "▏",
             })
         end,
-
     }
 
     -- latex
@@ -200,7 +209,6 @@ return require("packer").startup(function(use)
         opts = true,
         ft = { "tex" },
         setup = function()
-            vim.api.nvim_set_var('maplocalleader', ' ')
             vim.g.vimtex_compiler_latexmk = { continuous = 0 }
             vim.g.vimtex_syntax_enabled = 0
         end,
@@ -217,12 +225,14 @@ return require("packer").startup(function(use)
                     light_style = "moon",
                     transparent = true, -- 背景を半透明
                 })
+                vim.cmd([[colorscheme tokyonight-storm]])
             end,
         }
 
         use {
             "nvim-lualine/lualine.nvim", -- ステータスライン
-            requires = { "nvim-tree/nvim-web-devicons" },
+            requires = { "nvim-tree/nvim-web-devicons", opt = true },
+            wants = { "nvim-web-devicons" },
             config = function()
                 require("lualine").setup {
                 }
@@ -238,7 +248,9 @@ return require("packer").startup(function(use)
 
         use {
             "nvim-treesitter/nvim-treesitter", -- シンタックスハイライト build-essentialが必要
+            opt = true,
             run = ":TSUpdate",
+            event = { "BufRead", "BufNewFile", "InsertEnter", "CmdlineEnter" },
             config = function()
                 require("nvim-treesitter.configs").setup({
                     -- ensure_installed = 'all',
@@ -266,21 +278,19 @@ return require("packer").startup(function(use)
                     module = { "notify" },
                     config = function()
                         require("notify").setup {
-                            -- background_colour = '#000000'
+                            background_colour = '#000000'
                         }
                     end
                 },
             },
-            wants = { "nvim-treesitter" },
+            -- wants = { "nvim-treesitter" },
             setup = function()
                 if not _G.__vim_notify_overwritten then
                     vim.notify = function(...)
                         local arg = { ... }
-                        require "notify"
-                        require "noice"
-                        vim.schedule(function()
-                            vim.notify(unpack(args))
-                        end)
+                        require("notify")
+                        require("noice")
+                        vim.schedule(function() vim.notify(unpack(args)) end)
                     end
                     _G.__vim_notify_overwritten = true
                 end
@@ -313,9 +323,14 @@ return require("packer").startup(function(use)
             opts = true,
             cmd = "NvimTreeToggle",
             requires = {
-                "nvim-lua/plenary.nvim",
-                "nvim-tree/nvim-web-devicons",
-                "MunifTanjim/nui.nvim",
+                { "nvim-lua/plenary.nvim",       opt = true },
+                { "nvim-tree/nvim-web-devicons", opt = true },
+                { "MunifTanjim/nui.nvim",        opt = true },
+            },
+            wants = {
+                'plenary.nvim',
+                'nvim-web-devicons',
+                'nui.nvim'
             },
             config = function()
                 require("nvim-tree").setup({
@@ -323,7 +338,6 @@ return require("packer").startup(function(use)
                         width = 30,
                         side = 'right',
                     },
-
                     renderer = {
                         highlight_git = true,
                         highlight_opened_files = 'name',
@@ -360,20 +374,30 @@ return require("packer").startup(function(use)
         use {
             "lewis6991/gitsigns.nvim", -- gitの状況確認
             opts = true,
-            event = { "FocusLost", "CursorHold" },
+            event = { "BufRead", "BufNewFile", "InsertEnter", "CmdlineEnter" },
+            -- event = { "FocusLost", "CursorHold" },
             config = function()
-                require("gitsigns").setup()
+                require("gitsigns").setup({
+                    signs = {
+                        add          = { text = '+' },
+                        change       = { text = '~' },
+                        delete       = { text = '_' },
+                        topdelete    = { text = '‾' },
+                        changedelete = { text = '~_' },
+                    },
+                    current_line_blame = true,
+                })
             end,
         }
 
         use {
-            "mbbill/undotree",
+            "mbbill/undotree", -- undo tree
             opts = true,
             cmd = { "UndotreeToggle" },
             setup = function()
                 vim.keymap.set("n", "<leader>r", "<cmd>UndotreeToggle<cr>")
             end,
-        } -- undo tree
+        }
 
         use {
             "vim-jp/vimdoc-ja",
@@ -385,28 +409,87 @@ return require("packer").startup(function(use)
         use {
             "jvanja/vim-bootstrap4-snippets", -- snippet
             opts = true,
-            ft = { "html" }
+            ft = { "html", "js", "jsx" }
         }
 
         use {
             "alvan/vim-closetag", -- 自動でタグを閉じる
             opts = true,
-            ft = { "html" }
+            ft = { "html", "js", "jsx" },
+            setup = function()
+                vim.g.closetag_filenames = { "*.html", "*.js" }
+            end,
         }
 
         -- coc
         use {
             "neoclide/coc.nvim",
             branch = "release",
+            opt = true,
+            event = { "BufRead" },
         }
 
-        -- fzf telescope
-        -- use("nvim-lua/plenary.nvim")
         use {
             "nvim-telescope/telescope.nvim",
-            config = function()
-                require("telescope").setup {}
+            -- opts = true,
+            keys = '<Leader>',
+            module = { "telescope" },
+            cmd = { "Telescope" },
+            requires = {
+                { "nvim-telescope/telescope-ghq.nvim",        opt = true },
+                { "nvim-telescope/telescope-z.nvim",          opt = true },
+                { 'nvim-tree/nvim-web-devicons',              opt = true },
+                { 'nvim-lua/plenary.nvim',                    opt = true },
+                { 'nvim-telescope/telescope-fzf-native.nvim', opt = true, run = 'make' },
+            },
+
+            wants = {
+                "telescope-ghq.nvim",
+                "telescope-z.nvim",
+                'nvim-web-devicons',
+                'plenary.nvim',
+                'telescope-fzf-native.nvim'
+            },
+            setup = function()
+                local function builtin(name)
+                    return function(opt)
+                        return function()
+                            return require("telescope.builtin")[name](opt or {})
+                        end
+                    end
+                end
+
+                local function extensions(name, prop)
+                    return function(opt)
+                        return function()
+                            local telescope = require "telescope"
+                            telescope.load_extension(name)
+                            return telescope.extensions[name][prop](opt or {})
+                        end
+                    end
+                end
+
+                vim.keymap.set("n", "<Leader>f:", builtin "command_history" {})
+                vim.keymap.set("n", "<Leader>fG", builtin "grep_string" {})
+                vim.keymap.set("n", "<Leader>fH", builtin "help_tags" { lang = "ja" })
+                vim.keymap.set("n", "<Leader>fm", builtin "man_pages" { sections = { "ALL" } })
+                vim.keymap.set("n", "<Leader>fq", extensions("ghq", "list") {})
+                vim.keymap.set("n", "<Leader>fz", extensions("z", "list") {})
+                vim.keymap.set("n", "<leader>o", builtin "find_files" {})
+                vim.keymap.set("n", "<leader>ff", "<cmd>Telescope<cr>")
             end,
+            config = function()
+                require("telescope").setup {
+                    defaults = {},
+                    pickers = {
+                        find_files = {
+                            theme = "dropdown",
+                            hidden = true,
+                        }
+                    },
+                    extensions = {}
+                }
+            end
         }
 
         use {
@@ -415,6 +498,15 @@ return require("packer").startup(function(use)
             cmd = { "StartupTime" }
         }
     end
+    -- Lua
+    use {
+        "folke/which-key.nvim",
+        config = function()
+            vim.o.timeout = true
+            vim.o.timeoutlen = 300
+            require("which-key").setup {}
+        end
+    }
     if PACKER_BOOTSTRAP then
         require("packer").sync()
     end
