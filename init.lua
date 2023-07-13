@@ -36,19 +36,19 @@ end
 -------------
 -- ファイル
 vim.opt.fileencoding = "utf-8" -- エンコーディングをUTF-8に設定
-vim.opt.swapfile = false       -- スワップファイルを作成しない
-vim.opt.helplang = "ja"        -- ヘルプファイルの言語は日本語
-vim.opt.hidden = true          -- バッファを切り替えるときにファイルを保存しなくてもOKに
+vim.opt.swapfile = false       -- スワップファイルを無効化
+vim.opt.helplang = "ja"        -- ヘルプの言語を日本語に設定
+vim.opt.hidden = true          -- 非表示のバッファーも編集可能にする
 
 -- カーソルと表示
-vim.opt.cursorline = true   -- カーソルがある行を強調
-vim.opt.cursorcolumn = true -- カーソルがある列を強調
+vim.opt.cursorline = true   -- カーソルの現在行を強調表示
+vim.opt.cursorcolumn = true -- カーソルの現在列を強調表示
 
 -- クリップボード共有
 -- vim.opt.clipboard:append({ "unnamedplus" }) -- レジスタとクリップボードを共有
 
 -- メニューとコマンド
-vim.opt.wildmenu = true -- コマンドラインで補完
+vim.opt.wildmenu = true -- タブ補完やコマンド補完時にワイルドメニューを表示
 vim.opt.cmdheight = 1   -- コマンドラインの表示行数
 vim.opt.laststatus = 2  -- 下部にステータスラインを表示
 vim.opt.showcmd = true  -- コマンドラインに入力されたコマンドを表示
@@ -146,22 +146,22 @@ packer.startup(function(use)
     use {
         "wbthomason/packer.nvim",
         opt = true,
-        ft = { "lua" }
+        ft = { "lua" },
     }
 
     -- 入力補助
     use {
         "rhysd/clever-f.vim", -- f の強化
-        opts = true,
+        opt = true,
         keys = { "n", "f" },
         setup = function()
-            vim.g['clever_f_across_no_line'] = 1
+            vim.g.clever_f_across_no_line = 1
         end,
     }
 
     use {
         "tpope/vim-commentary", -- コメントアウト
-        opts = true,
+        opt = true,
         keys = { "nv", "gc" },
         cmd = "Commentary",
         setup = function()
@@ -177,18 +177,16 @@ packer.startup(function(use)
 
     use {
         "tpope/vim-surround", -- cs"':''->"" ds":""->_
-        opts = true,
+        opt = true,
         keys = { { "n", "cs" }, { "n", "ds" } },
         requires = { "tpope/vim-repeat", opt = true },
-        wants = { "vim-repeat" }
+        wants = { "vim-repeat" },
     }
 
 
     -- 見た目
     use {
         "echasnovski/mini.indentscope", -- インデントアニメーション
-        -- opt = true,
-        -- event = { "BufRead", "BufNewFile", "InsertEnter", "CmdlineEnter" },
         event = { "InsertEnter" },
         config = function()
             require("mini.indentscope").setup({
@@ -200,7 +198,7 @@ packer.startup(function(use)
     -- latex
     use {
         'lervag/vimtex',
-        opts = true,
+        opt = true,
         ft = { "tex" },
         setup = function()
             vim.g.vimtex_compiler_latexmk = { continuous = 0 }
@@ -236,7 +234,8 @@ packer.startup(function(use)
         use {
             "kdheepak/tabline.nvim", -- タブライン
             config = function()
-                require("tabline").setup({})
+                require("tabline").setup {
+                }
             end,
         }
 
@@ -277,18 +276,6 @@ packer.startup(function(use)
                     end
                 },
             },
-            -- wants = { "nvim-treesitter" },
-            setup = function()
-                if not _G.__vim_notify_overwritten then
-                    vim.notify = function(...)
-                        local arg = { ... }
-                        require("notify")
-                        require("noice")
-                        vim.schedule(function() vim.notify(unpack(args)) end)
-                    end
-                    _G.__vim_notify_overwritten = true
-                end
-            end,
             config = function()
                 require("noice").setup {
                     -- noice.nvim の設定
@@ -309,7 +296,7 @@ packer.startup(function(use)
                         lsp_doc_border = false,       -- add a border to hover docs and signature help
                     },
                 }
-            end
+            end,
         }
 
         use {
@@ -367,9 +354,8 @@ packer.startup(function(use)
 
         use {
             "lewis6991/gitsigns.nvim", -- gitの状況確認
-            opts = true,
+            opt = true,
             event = { "BufRead", "BufNewFile", "InsertEnter", "CmdlineEnter" },
-            -- event = { "FocusLost", "CursorHold" },
             config = function()
                 require("gitsigns").setup({
                     signs = {
@@ -396,14 +382,14 @@ packer.startup(function(use)
         use {
             "vim-jp/vimdoc-ja",
             opts = true,
-            cmd = { "help" }
+            cmd = { "help" },
         }
 
         -- html
         use {
             "jvanja/vim-bootstrap4-snippets", -- snippet
             opts = true,
-            ft = { "html", "js", "jsx" }
+            ft = { "html", "js", "jsx" },
         }
 
         use {
@@ -436,13 +422,12 @@ packer.startup(function(use)
                 { 'nvim-lua/plenary.nvim',                    opt = true },
                 { 'nvim-telescope/telescope-fzf-native.nvim', opt = true, run = 'make' },
             },
-
             wants = {
                 "telescope-ghq.nvim",
                 "telescope-z.nvim",
                 'nvim-web-devicons',
                 'plenary.nvim',
-                'telescope-fzf-native.nvim'
+                'telescope-fzf-native.nvim',
             },
             setup = function()
                 local function builtin(name)
@@ -479,27 +464,28 @@ packer.startup(function(use)
                         find_files = {
                             theme = "dropdown",
                             hidden = true,
-                        }
+                        },
                     },
-                    extensions = {}
+                    extensions = {},
                 }
-            end
+            end,
         }
 
         use {
             "dstein64/vim-startuptime",
             opts = true,
-            cmd = { "StartupTime" }
+            cmd = { "StartupTime" },
         }
     end
     -- Lua
     use {
         "folke/which-key.nvim",
+        event = "VimEnter",
         config = function()
             vim.o.timeout = true
             vim.o.timeoutlen = 300
             require("which-key").setup {}
-        end
+        end,
     }
     if not packer_installed then
         require("packer").sync()
