@@ -117,28 +117,22 @@ vim.api.nvim_create_autocmd({ "BufReadPost" }, {
 --------------
 -- PACKAGES --
 --------------
--- packer.nvimのインストール状態を確認し自動でインストール
-local ensure_packer = function()
-    local install_path = vim.fn.stdpath("data") .. "/site/pack/packer/start/packer.nvim"
-    if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-        vim.fn.system({ "git", "clone", "--depth", "1", "https://github.com/wbthomason/packer.nvim", install_path })
-        vim.cmd([[packadd packer.nvim]])
-        return true
-    end
-    return false
-end
-PACKER_BOOTSTRAP = ensure_packer() -- packer_bootstrap
-
 -- Autocommand that reloads neovim whenever you save the plugins.lua file
--- vim.cmd([[
---   augroup packer_user_config
---     autocmd!
---     autocmd BufWritePost init.lua source <afile> | PackerSync
---   augroup end
--- ]])
+vim.cmd([[
+  augroup packer_user_config
+    autocmd!
+    autocmd BufWritePost init.lua source <afile> | PackerSync
+  augroup end
+]])
+
+local packer_installed = pcall(vim.cmd, [[packadd packer.nvim]])
+if not packer_installed then
+    local install_path = vim.fn.stdpath("data") .. "/site/pack/packer/start/packer.nvim"
+    vim.fn.system({ "git", "clone", "--depth", "1", "https://github.com/wbthomason/packer.nvim", install_path })
+    vim.cmd([[packadd packer.nvim]])
+end
 
 local packer = require "packer"
--- Have packer use a popup window
 packer.init({
     display = {
         open_fn = function()
@@ -507,7 +501,7 @@ packer.startup(function(use)
             require("which-key").setup {}
         end
     }
-    if PACKER_BOOTSTRAP then
+    if not packer_installed then
         require("packer").sync()
     end
 end)
