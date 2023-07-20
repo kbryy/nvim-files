@@ -29,7 +29,7 @@ else
     keymap("n", "<leader>ss", ":split<Return><C-w>w", opts)
     keymap("n", "<leader>sv", ":vsplit<Return><C-w>w", opts)
     keymap("n", "<esc><esc>", ":<c-u>set nohlsearch<cr>", opts)
-    keymap("n", "<C-a>", "gg<S-v>G", opts)
+    -- keymap("n", "<C-a>", "gg<S-v>G", opts)
 
     keymap('t', '<esc>', '<c-\\><c-n>', opts)
     keymap('t', 'jj', '<c-\\><c-n>', opts)
