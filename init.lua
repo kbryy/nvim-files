@@ -1,39 +1,67 @@
--------------
--- KEYMAPS --
--------------
+------------- KEYMAPS ---------------
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
-
+--
 local opts = { noremap = true, silent = true }
-local keymap = vim.keymap.set
+local keyset = vim.keymap.set
+keyset({ "n", "v" }, "<c-j>", ":", opts)
+keyset({ "n", "v" }, "J", "10j", opts)
+keyset({ "n", "v" }, "K", "10k", opts)
+keyset({ "n", "v" }, "H", "_", opts)
+keyset({ "n", "v" }, "L", "$", opts)
+keyset({ "n", "v" }, ";", "zz", opts)
+keyset({ "n", "v" }, "<Space>y", "\"+y", opts)
+keyset({ "n", "v" }, "<Space>p", "\"+p", opts)
+keyset({ "n", "v" }, "<leader>h", "<cmd>bprevious<cr>", opts)
+keyset({ "n", "v" }, "<leader>l", "<cmd>bnext<cr>", opts)
+keyset({ "n", "v" }, "<leader>q", ":<C-u>q!<Return>", opts)
+keyset('i', 'jj', '<c-c>', opts)
+keyset("i", ",", ",<Space>", opts)
+keyset("n", "<leader>w", "<cmd>w<cr>", opts)
+keyset("n", "<esc><esc>", ":<c-u>set nohlsearch<cr>", opts)
+keyset('t', 'jj', '<c-\\><c-n>', opts)
 
-keymap({ "n", "v" }, "<c-j>", "}", opts)
-keymap({ "n", "v" }, "<c-k>", "{", opts)
-keymap({ "n", "v" }, "<c-h>", "_", opts)
-keymap({ "n", "v" }, "<c-l>", "$", opts)
-keymap({ "n", "v" }, "<c-;>", "%", opts)
-
-if vim.g.vscode then
-    keymap("n", "<leader>o", "<cmd>call VSCodeNotify('workbench.action.quickOpen')<cr>")
-    keymap("n", "<leader>w", "<cmd>call VSCodeNotify('workbench.action.files.save')<cr>")
-    keymap("n", "<leader>h", "<cmd>call VSCodeNotify('workbench.action.previousEditor')<cr>")
-    keymap("n", "<leader>l", "<cmd>call VSCodeNotify('workbench.action.nextEditor')<cr>")
-else
-    keymap('i', 'jj', '<c-c>', opts)
-    keymap("i", ",", ",<Space>", opts)
-
-    keymap("n", "<leader>w", "<cmd>w<cr>", opts)
-    keymap("n", "<leader>h", "<cmd>bprevious<cr>", opts)
-    keymap("n", "<leader>l", "<cmd>bnext<cr>", opts)
-    keymap("n", "<leader>q", ":<C-u>q!<Return>", opts)
-    keymap("n", "<leader>ss", ":split<Return><C-w>w", opts)
-    keymap("n", "<leader>sv", ":vsplit<Return><C-w>w", opts)
-    keymap("n", "<esc><esc>", ":<c-u>set nohlsearch<cr>", opts)
-    -- keymap("n", "<C-a>", "gg<S-v>G", opts)
-
-    keymap('t', '<esc>', '<c-\\><c-n>', opts)
-    keymap('t', 'jj', '<c-\\><c-n>', opts)
+-- coc keysetting
+vim.opt.updatetime = 100
+vim.opt.signcolumn = "yes"
+function _G.check_back_space()
+    local col = vim.fn.col('.') - 1
+    return col == 0 or vim.fn.getline('.'):sub(col, col):match('%s') ~= nil
 end
+local opts = {silent = true, noremap = true, expr = true, replace_keycodes = false}
+keyset("i", "<TAB>", 'coc#pum#visible() ? coc#pum#next(1) : v:lua.check_back_space() ? "<TAB>" : coc#refresh()', opts)
+keyset("i", "<S-TAB>", [[coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"]], opts)
+keyset("i", "<cr>", [[coc#pum#visible() ? coc#pum#confirm() : "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"]], opts)
+keyset("i", "<c-j>", "<Plug>(coc-snippets-expand-jump)")
+keyset("i", "<c-space>", "coc#refresh()", {silent = true, expr = true})
+keyset("n", "[g", "<Plug>(coc-diagnostic-prev)", {silent = true})
+keyset("n", "]g", "<Plug>(coc-diagnostic-next)", {silent = true})
+
+-- コードのジャンプナビゲーション
+keyset("n", "gd", "<Plug>(coc-definition)", {silent = true})
+keyset("n", "gy", "<Plug>(coc-type-definition)", {silent = true})
+keyset("n", "gi", "<Plug>(coc-implementation)", {silent = true})
+keyset("n", "gr", "<Plug>(coc-references)", {silent = true})
+
+-- プレビューウィンドウでドキュメントを表示するために K を使用します
+function _G.show_docs()
+    local cw = vim.fn.expand('<cword>')
+    if vim.fn.index({'vim', 'help'}, vim.bo.filetype) >= 0 then
+        vim.api.nvim_command('h ' .. cw)
+    elseif vim.api.nvim_eval('coc#rpc#ready()') then
+        vim.fn.CocActionAsync('doHover')
+    else
+        vim.api.nvim_command('!' .. vim.o.keywordprg .. ' ' .. cw)
+    end
+end
+keyset("n", "<space>k", '<CMD>lua _G.show_docs()<CR>', {silent = true})
+
+vim.api.nvim_create_augroup("CocGroup", {})
+vim.api.nvim_create_autocmd("CursorHold", {
+    group = "CocGroup",
+    command = "silent call CocActionAsync('highlight')",
+    desc = "Highlight symbol under cursor on CursorHold"
+})
 
 -------------
 -- OPTIONS --
@@ -47,7 +75,7 @@ local options = {
 
     -- カーソルと表示
     cursorline = true,   -- カーソルの現在行を強調表示
-    cursorcolumn = true, -- カーソルの現在列を強調表示
+    -- cursorcolumn = true, -- カーソルの現在列を強調表示
 
     -- メニューとコマンド
     wildmenu = true, -- タブ補完やコマンド補完時にワイルドメニューを表示
@@ -65,8 +93,8 @@ local options = {
     background = "dark",  -- ダークカラーを使用する
 
     -- インデント
-    shiftwidth = 4,     -- シフト幅を4に設定する
-    tabstop = 4,        -- タブ幅を4に設定する
+    shiftwidth = 2,     -- シフト幅を4に設定する
+    tabstop = 2,        -- タブ幅を4に設定する
     expandtab = true,   -- タブ文字をスペースに置き換える
     autoindent = true,  -- 自動インデントを有効にする
     smartindent = true, -- インデントをスマートに調整する
@@ -79,8 +107,8 @@ local options = {
     showmatch = true,  -- 対応する括弧をハイライト表示
 
     -- インタフェース
-    winblend = 20,      -- ウィンドウの不透明度
-    pumblend = 20,      -- ポップアップメニューの不透明度
+    winblend = 0,      -- ウィンドウの不透明度
+    pumblend = 0,      -- ポップアップメニューの不透明度
     signcolumn = "yes", -- サインカラムを表示
 
     -- undo
@@ -117,15 +145,32 @@ vim.api.nvim_create_autocmd({ "BufReadPost" }, {
 
 -- Autocommand that reloads neovim whenever you save the plugins.lua file
 vim.cmd([[
-  augroup packer_user_config
-    autocmd!
-    autocmd BufWritePost plugins.lua source <afile> | PackerSync | PackerCompile
-  augroup end
+augroup packer_user_config
+autocmd!
+autocmd BufWritePost plugins.lua source <afile> | PackerSync | PackerCompile
+augroup end
 ]])
 
 vim.api.nvim_create_autocmd("BufWritePost", {
     pattern = { "plugins.lua" },
     command = "PackerCompile",
 })
+
+-- Neovim クリップボード設定（フルパス指定）
+local is_wsl = true
+if is_wsl then
+    vim.g.clipboard = {
+        name = "win32yank",
+        copy = {
+            ["+"] = "/home/ykobari/bin/win32yank.exe -i --crlf",
+            ["*"] = "/home/ykobari/bin/win32yank.exe -i --crlf",
+        },
+        paste = {
+            ["+"] = "/home/ykobari/bin/win32yank.exe -o --lf",
+            ["*"] = "/home/ykobari/bin/win32yank.exe -o --lf",
+        },
+        cache_enabled = 1,
+    }
+end
 
 require("plugins")
